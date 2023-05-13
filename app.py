@@ -1,5 +1,4 @@
 import os
-from dotenv import load_dotenv
 import shutil
 
 movies_src_folder = os.path.normpath(os.environ.get('MOVIES_SRC_FOLDER'))
