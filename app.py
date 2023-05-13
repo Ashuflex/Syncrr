@@ -2,10 +2,8 @@ import os
 from dotenv import load_dotenv
 import shutil
 
-load_dotenv('C:/Users/decau/Documents/Informatique/ashuflex/.env')
-
-movie_src = os.path.normpath(os.environ.get('movie_src'))
-movie_dst = os.path.normpath(os.environ.get('movie_dst'))
+movies_src_folder = os.path.normpath(os.environ.get('MOVIES_SRC_FOLDER'))
+movies_dst_folder = os.path.normpath(os.environ.get('MOVIES_DST_FOLDER'))
 
 def copy_srt_files(source_dir, destination_dir):
     for root, dirs, files in os.walk(source_dir):
@@ -20,7 +18,7 @@ def copy_srt_files(source_dir, destination_dir):
             
             if not os.path.isdir(os.path.dirname(destination_file_path)):
                 continue
-            
+
             if os.path.isfile(destination_file_path):
                 source_modification_time = os.path.getmtime(source_file_path)
                 destination_modification_time = os.path.getmtime(destination_file_path)
@@ -30,4 +28,4 @@ def copy_srt_files(source_dir, destination_dir):
             else:
                 shutil.copy2(source_file_path, destination_file_path)
 
-copy_srt_files(movie_src, movie_dst)
+copy_srt_files(movies_src_folder, movies_dst_folder)
