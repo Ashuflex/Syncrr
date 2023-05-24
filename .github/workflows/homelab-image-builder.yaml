@@ -41,27 +41,12 @@ jobs:
           tags: |
             type=sha,enable=true,priority=100,prefix=multi-arch-,suffix=,format=short
 
-      - name: Build
-        if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
-        id: docker_build
-        uses: docker/build-push-action@v3
-        with:
-          push: false
-          context: ./
-          file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64/v8
-          tags: ${{ steps.meta.outputs.tags }}
-          cache-from: type=registry,ref=user/app:latest
-          cache-to: type=inline
-
       - name: Build and push
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
         id: docker_build_push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           push: true
-          context: ./
-          file: ./Dockerfile
           platforms: linux/amd64,linux/arm64/v8
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=registry,ref=user/app:latest
