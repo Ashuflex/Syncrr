@@ -2,7 +2,7 @@ name: Ashuflex image builder
 on:
   push:
     branches:
-      - Master
+      - master
 jobs:
   Home-Lab-Builder:
     runs-on: ubuntu-latest
