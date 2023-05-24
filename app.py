@@ -10,15 +10,17 @@ movies_dst_folder = os.path.join("/data", movies_dst_folder_relpath)
 def copy_srt_files():
     for root, dirs, files in os.walk(movies_src_folder):
         for file in files:
-
             if not file.endswith('.srt'):
                 continue
+
+            print(file)
 
             src_file_path = os.path.join(root, file)
             relative_path = os.path.relpath(src_file_path, movies_src_folder)
             dst_file_path = os.path.join(movies_dst_folder, relative_path)
             
             if not os.path.isdir(os.path.dirname(dst_file_path)):
+                print("DST FOLDER doesn't exist")
                 continue
 
             if os.path.isfile(dst_file_path):
@@ -28,6 +30,7 @@ def copy_srt_files():
                 if src_modification_time > dst_modification_time:
                     shutil.copy2(src_file_path, dst_file_path)
             else:
+                print(f'copying {src_file_path} to {dst_file_path}')
                 shutil.copy2(src_file_path, dst_file_path)
 
 def delete_deprecated_srt():
