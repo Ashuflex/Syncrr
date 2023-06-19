@@ -28,4 +28,6 @@ LICENSE
 .idea
 .github
 *.md
+template_folder
+test_folder
 
