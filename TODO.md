@@ -1,2 +1,0 @@
-- Make MOVIES_DST_FOLDER_RELPATH an array of folers
-- Log how many files have been duplicated and removed
