@@ -2,7 +2,7 @@ import os
 import shutil
 import logging
 import typing
-
+from singleton import Singleton_Global_Variables
 
 def get_source_folder(prefix: str = "SRC_FOLDER") -> str:
     """
@@ -22,13 +22,14 @@ def find_all_dst_folders(prefix: str = "DST_FOLDER") -> typing.List[str]:
     """
     Function to find all destination folders based on a prefix.
     
-    Checks the environment variable "{prefix}_0", "{prefix}_1", ..., "{prefix}_N",  by default :envvar:`DST_FOLDER_0` at least.
+    Checks the environment variable "{prefix}_0", "{prefix}_1", ..., "{prefix}_N",  
+     by default :envvar:`DST_FOLDER_0` at least.
     
     :return: list of normalized path of destination foldersesds    :param prefix: Prefix to find the 
     """""""""
     counter: bool = 0
     run_search: bool = True
-    list_result_dst_folders: typing.List[str] = []
+    list_result_dst_folders: typing.List[str] = list()
     while run_search:
         if var_bla := os.environ.get(f"{prefix}_{counter}"):
             counter += 1
@@ -48,6 +49,11 @@ def copy_srt_files() -> int:
     :return: Number of copied files
     """
     copy_cnt: int = 0
+    singleton_global_variables = Singleton_Global_Variables()
+    logging_level_detailed = singleton_global_variables.detailed_message()
+    logging_level_count = singleton_global_variables.counter_messages()
+    dry_run_state = singleton_global_variables.get_dry_run_state()
+    logging.debug(f"The current state of dry_run_state in copy_srt_file is {dry_run_state}")
     for root, dirs, files in os.walk(movies_src_folder):
     # Should get all files then filter later
         for file_iter in files:
@@ -67,14 +73,18 @@ def copy_srt_files() -> int:
                     dst_modification_time = os.path.getmtime(dst_file_path_iter)
 
                     if src_modification_time > dst_modification_time:
-                        logging.info(f'copying {src_file_path} to {dst_file_path_iter}')
-                        shutil.copy2(src_file_path, dst_file_path_iter)
+                        logging.log(msg = f'copying {src_file_path} to {dst_file_path_iter}',
+                         level=logging_level_detailed)
+                        if not dry_run_state:
+                            shutil.copy2(src_file_path, dst_file_path_iter)
                         copy_cnt += 1
                 else: 
-                    logging.info(f'copying {src_file_path} to {dst_file_path_iter}')
-                    shutil.copy2(src_file_path, dst_file_path_iter)
+                    logging.log(msg=f'copying {src_file_path} to {dst_file_path_iter}',
+                     level=logging_level_detailed)
+                    if not dry_run_state:
+                        shutil.copy2(src_file_path, dst_file_path_iter)
                     copy_cnt += 1
-    logging.info(f'Copied:{copy_cnt} files')
+    logging.log(msg = f'Copied:{copy_cnt} files', level=logging_level_count)
 
 def delete_deprecated_srt() -> int:
     """
@@ -85,6 +95,10 @@ def delete_deprecated_srt() -> int:
     :return: Number of deleted folders
     """
     delete_dir_cnt: int = 0
+    singleton_global_variables = Singleton_Global_Variables()
+    dry_run_state = singleton_global_variables.get_dry_run_state()
+    logging.debug(f"The current state of dry_run_state in delete_deprecated_srt is {dry_run_state}")
+    logging_level_count = singleton_global_variables.counter_messages()
     for movies_dst_folder_relpath_iter in movies_dst_folder_relpath:
         for root, dirs, files in os.walk(os.path.join("/data", movies_dst_folder_relpath_iter)):
             # Cleanup Dirst
@@ -96,7 +110,9 @@ def delete_deprecated_srt() -> int:
                 src_dir_path = os.path.join(movies_src_folder, relative_path)
 
                 if not os.path.isdir(src_dir_path):
-                    shutil.rmtree(dst_dir_path)
+                    if not dry_run_state:
+                        shutil.rmtree(dst_dir_path)
+                    logging.debug(f'Deleting {dst_dir_path}')
                     delete_dir_cnt += 1
                     
         for root, dirs, files in os.walk(os.path.join("/data", movies_dst_folder_relpath_iter)):
@@ -109,8 +125,10 @@ def delete_deprecated_srt() -> int:
                 src_file_path = os.path.join(movies_src_folder, relative_path)
 
                 if not os.path.isfile(src_file_path):
-                    os.remove(dst_file_path)
-    logging.info(f'Deleted:{delete_dir_cnt} folders')
+                    if not dry_run_state:
+                        os.remove(dst_file_path)
+                    logging.debug(f"Deleting {dst_file_path}")
+    logging.log(msg = f'Deleted:{delete_dir_cnt} folders', level = logging_level_count)
                 
 try:
     # Add dry run parameters
@@ -121,10 +139,28 @@ try:
     movies_dst_folder: typing.List[str] = \
         [os.path.join("/data", dst_folder_iter) for dst_folder_iter in movies_dst_folder_relpath]
     
+    singleton_global_variables = Singleton_Global_Variables()
+
+    
     if not os.environ.get('LOG_LEVEL'):
-        logging.basicConfig(level='ERROR')
+        value_logging = logging.ERROR
     else:
-        logging.basicConfig(level=os.environ.get('LOG_LEVEL'))
+        dict_mapping_levels = logging.getLevelNamesMapping()
+        try:
+            value_logging = dict_mapping_levels[os.environ.get('LOG_LEVEL')]
+        except KeyError: # Python < 3.11.
+            dict_mapping_levels = {'DEBUG': logging.DEBUG, 
+                        'INFO': logging.INFO,
+                        'WARNING': logging.WARNING,
+                        'ERROR': logging.ERROR
+                        }
+            try:
+                value_logging = dict_mapping_levels[os.environ.get('LOG_LEVEL')]
+            except KeyError:
+                raise KeyError(f"Cannot interpret LOG_LEVEL environment variable {os.environ.get('LOG_LEVEL')}")
+    singleton_global_variables.set_logging_level(value_logging)
+    singleton_global_variables.set_dry_run_state()
+    logging.basicConfig(level=value_logging)
 
     delete_deprecated_srt()
     copy_srt_files()
