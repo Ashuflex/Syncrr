@@ -2,3 +2,5 @@
 .env
 .vscode/
 .idea
+template_folder
+test_folder
