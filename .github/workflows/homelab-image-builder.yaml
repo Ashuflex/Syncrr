@@ -33,7 +33,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: vyrtualsynthese/srt-moving-script
+          images: vyrtualsynthese/syncrr
           flavor: |
             latest=true
             prefix=multi-arch-,onlatest=true
